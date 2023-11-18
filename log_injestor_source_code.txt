@@ -1,0 +1,35 @@
+import static spark.Spark.*;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
+import com.google.gson.Gson;
+
+public class LogIngestor {
+
+    public static void main(String[] args) {
+        port(3000);
+
+        RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(new HttpHost("localhost", 9200, "http")));
+
+        post("/ingest", (req, res) -> {
+            Gson gson = new Gson();
+            LogData logData = gson.fromJson(req.body(), LogData.class);
+
+            IndexRequest indexRequest = new IndexRequest("logs")
+                    .source(gson.toJson(logData), XContentType.JSON);
+
+            client.index(indexRequest, RequestOptions.DEFAULT);
+
+            return "Log ingested successfully!";
+        });
+    }
+
+    static class LogData {
+        private String timestamp;
+        private String message;
+       
+    }
+}

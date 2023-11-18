@@ -1,0 +1,34 @@
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import java.io.IOException;
+
+public class LogQuery {
+
+    public static void main(String[] args) throws IOException {
+        RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(new HttpHost("localhost", 9200, "http")));
+
+        SearchRequest searchRequest = new SearchRequest("logs");
+        searchRequest.source().query(QueryBuilders.matchQuery("message", "error"));
+
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        for (SearchHit hit : searchResponse.getHits().getHits()) {
+            System.out.println(hit.getSourceAsString());
+        }
+
+        SearchRequest filterRequest = new SearchRequest("logs");
+        filterRequest.source().query(QueryBuilders.matchQuery("level", "warning"));
+
+        SearchResponse filterResponse = client.search(filterRequest, RequestOptions.DEFAULT);
+        for (SearchHit hit : filterResponse.getHits().getHits()) {
+            System.out.println(hit.getSourceAsString());
+        }
+
+        client.close();
+    }
+}
